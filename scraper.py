@@ -5929,8 +5929,8 @@ IST = pytz.timezone('Asia/Kolkata')
 # Config
 # ============================================================
 GOOGLE_SHEETS_CREDENTIALS_FILE = "credentials.json"
-GOOGLE_SHEET_NAME               = "Instagram Scripts"
-GOOGLE_WORKSHEET_NAME           = "Scritpsfinal"
+GOOGLE_SHEET_NAME               = "Salam Thane"
+GOOGLE_WORKSHEET_NAME           = "Sheet1"
 TARGET_SCRIPTS                  = 20
 
 VALID_CATEGORIES = [
