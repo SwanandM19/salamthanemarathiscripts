@@ -12,6 +12,7 @@
 # from typing import List, Dict
 # import hashlib
 # import pytz
+# import time
 
 
 # # ============================================================
@@ -46,7 +47,20 @@
 # GOOGLE_SHEETS_CREDENTIALS_FILE = "credentials.json"
 # GOOGLE_SHEET_NAME               = "Salam Thane"
 # GOOGLE_WORKSHEET_NAME           = "Sheet1"
-# TARGET_SCRIPTS                  = 20
+# TARGET_SCRIPTS                  = 10
+
+# # Thane-specific keywords — article MUST contain at least one
+# THANE_KEYWORDS = [
+#     'ठाणे', 'thane', 'kalyan', 'कल्याण', 'dombivli', 'डोंबिवली',
+#     'ambarnath', 'अंबरनाथ', 'badlapur', 'बदलापूर', 'ulhasnagar',
+#     'उल्हासनगर', 'bhiwandi', 'भिवंडी', 'mira road', 'मीरा रोड',
+#     'mira-bhayandar', 'मीरा-भाईंदर', 'shahapur', 'शहापूर',
+#     'titwala', 'टिटवाळा', 'navi mumbai', 'नवी मुंबई', 'belapur',
+#     'kharghar', 'panvel', 'पनवेल', 'vashi', 'nerul', 'kopar khairane',
+#     'airoli', 'ghansoli', 'turbhe', 'sanpada', 'juinagar',
+#     'thane district', 'ठाणे जिल्हा', 'ठाणे महापालिका', 'TMC',
+#     'ठाणे पोलीस', 'thane police', 'ठाणे रेल्वे', 'thane station',
+# ]
 
 # VALID_CATEGORIES = [
 #     "sports", "general", "crime", "politics",
@@ -54,25 +68,20 @@
 # ]
 
 # REFUSAL_KEYWORDS = [
-#     # English
 #     "I appreciate", "I should clarify", "I'm Perplexity",
 #     "search assistant", "I'm not able", "I cannot create",
 #     "Would you like", "clarify my role", "I'm an AI",
 #     "as an AI", "I don't create",
-#     # Hindi
 #     "मुझे खेद है", "मैं इस अनुरोध", "खोज परिणामों में",
 #     "प्रदान किए गए", "कृपया स्पष्ट करें", "मैं सही तरीके",
 #     "विशिष्ट तथ्य नहीं", "आवश्यक माहिती",
-#     # Marathi
 #     "मला खेद आहे", "मला क्षमस्व", "उत्तर देण्यासाठी आवश्यक",
 #     "शोध परिणामांमध्ये", "कृपया एक पूर्ण बातमी",
 #     "अधिक संबंधित शोध", "विशिष्ट घटना", "तपशील पुनः तपास",
-#     # Self-identification
 #     "मी Perplexity", "मी perplexity", "माझी भूमिका",
 #     "मूळ कार्याच्या विरुद्ध", "script लिहिण्याची विनंती",
 #     "सूचना देणे", "संशोधित उत्तरे", "मी एक AI",
 #     "script writer नाही", "मी तयार करू शकत नाही",
-#     # Fact-checking / clarification
 #     "शोध निकालांमध्ये", "मेल होत नाही", "script तयार करू शकतो पण",
 #     "विस्तृत search results", "स्पष्ट करा"
 # ]
@@ -95,6 +104,23 @@
 #     'utility news definition'
 # ]
 
+# SKIP_URL_PATTERNS = [
+#     'javascript:', 'mailto:', '#',
+#     '/category/', '/tag/', '/author/',
+#     'facebook.com', 'twitter.com', 'instagram.com',
+#     'youtube.com', 'whatsapp.com', '/myaccount/',
+#     '/install_app', '/advertisement', '/epaper',
+#     'web-stories', 'photo-gallery', '/videos/',
+#     '/games/', '/jokes/', '/terms-and-conditions',
+#     '/topic/', '/widget/', '/livetv',
+#     'articlelist', '/live',
+#     '/utility/', '/utilities/',
+#     '/adhyatma/', '/astrology/', '/rashifal/',
+#     '/horoscope/', '/jyotish/', '/puja/',
+#     '/dharm/', '/dharma/', '/spirituality/',
+#     '/rashibhavishya/', '/religion/',
+# ]
+
 # SCRIPT_CTA = "तुमचं काय मत आहे? कमेंट करून सांगा आणि फॉलो करा सलाम ठाणे."
 
 
@@ -108,170 +134,220 @@
 
 
 # # ============================================================
-# # News Sites
+# # Thane-Specific News Sites
+# # These URLs are Thane-focused sections of major news portals
 # # ============================================================
 # NEWS_SITES = [
 #     {
-#         "name": "TV9 Marathi",
-#         "url": "https://www.tv9marathi.com/latest-news",
-#         "link_pattern": "tv9marathi.com",
-#         "target": 4,
-#         "fetch_limit": 30
-#     },
-#     {
-#         "name": "ABP Majha",
-#         "url": "https://marathi.abplive.com/news",
-#         "link_pattern": "abplive.com",
-#         "target": 4,
-#         "fetch_limit": 30
-#     },
-#     {
-#         "name": "Lokmat",
-#         "url": "https://www.lokmat.com/latestnews/",
-#         "link_pattern": "lokmat.com",
-#         "target": 4,
-#         "fetch_limit": 30
-#     },
-#     {
-#         "name": "Maharashtra Times",
-#         "url": "https://maharashtratimes.com/",
+#         "name": "Maharashtra Times - Thane",
+#         "url": "https://maharashtratimes.com/maharashtra/thane-news",
 #         "link_pattern": "maharashtratimes.com",
-#         "target": 4,
+#         "target": 3,
 #         "fetch_limit": 30
 #     },
 #     {
-#         "name": "NDTV Marathi",
-#         "url": "https://marathi.ndtv.com/",
-#         "link_pattern": "marathi.ndtv.com",
-#         "target": 4,
+#         "name": "Lokmat - Thane",
+#         "url": "https://www.lokmat.com/thane/",
+#         "link_pattern": "lokmat.com",
+#         "target": 3,
 #         "fetch_limit": 30
+#     },
+#     {
+#         "name": "TV9 Marathi - Thane",
+#         "url": "https://www.tv9marathi.com/maharashtra/thane",
+#         "link_pattern": "tv9marathi.com",
+#         "target": 2,
+#         "fetch_limit": 25
+#     },
+#     {
+#         "name": "ABP Majha - Thane",
+#         "url": "https://marathi.abplive.com/news/thane",
+#         "link_pattern": "abplive.com",
+#         "target": 2,
+#         "fetch_limit": 25
+#     },
+#     {
+#         "name": "NDTV Marathi - Thane",
+#         "url": "https://marathi.ndtv.com/thane",
+#         "link_pattern": "marathi.ndtv.com",
+#         "target": 2,
+#         "fetch_limit": 25
+#     },
+#     {
+#         "name": "Thane Live",
+#         "url": "https://www.thanelive.com/latest-news/",
+#         "link_pattern": "thanelive.com",
+#         "target": 2,
+#         "fetch_limit": 25
+#     },
+#     {
+#         "name": "My Thane",
+#         "url": "https://www.mythane.in/category/news/",
+#         "link_pattern": "mythane.in",
+#         "target": 2,
+#         "fetch_limit": 25
 #     }
 # ]
 
 
 # # ============================================================
-# # Google Sheets Setup
+# # Thane Filter — STRICT: title OR content must mention Thane
 # # ============================================================
-# def setup_google_sheets():
-#     try:
-#         scope = [
-#             'https://spreadsheets.google.com/feeds',
-#             'https://www.googleapis.com/auth/drive'
-#         ]
-#         creds = Credentials.from_service_account_file(
-#             GOOGLE_SHEETS_CREDENTIALS_FILE, scopes=scope
-#         )
-#         client = gspread.authorize(creds)
+# def is_thane_related(title: str, content: str) -> bool:
+#     combined = (title + ' ' + content[:1000]).lower()
+#     return any(kw.lower() in combined for kw in THANE_KEYWORDS)
 
+
+# # ============================================================
+# # Google Sheets Setup — with 503 retry logic
+# # ============================================================
+# def setup_google_sheets(max_retries: int = 5, retry_delay: int = 10):
+#     for attempt in range(1, max_retries + 1):
 #         try:
-#             sheet = client.open(GOOGLE_SHEET_NAME)
-#             print(f"✅ Connected: '{GOOGLE_SHEET_NAME}'")
-#         except gspread.SpreadsheetNotFound:
-#             sheet = client.create(GOOGLE_SHEET_NAME)
-#             print(f"✅ Created: '{GOOGLE_SHEET_NAME}'")
-
-#         try:
-#             worksheet = sheet.worksheet(GOOGLE_WORKSHEET_NAME)
-#             print(f"✅ Worksheet: '{GOOGLE_WORKSHEET_NAME}'")
-#             current_rows = worksheet.row_count
-#             if current_rows < 2000:
-#                 worksheet.add_rows(5000 - current_rows)
-#                 print(f"✅ Expanded sheet: {current_rows} → 5000 rows")
-#             else:
-#                 print(f"✅ Sheet has {current_rows} rows — OK")
-
-#         except gspread.WorksheetNotFound:
-#             worksheet = sheet.add_worksheet(
-#                 title=GOOGLE_WORKSHEET_NAME, rows=5000, cols=10
+#             scope = [
+#                 'https://spreadsheets.google.com/feeds',
+#                 'https://www.googleapis.com/auth/drive'
+#             ]
+#             creds = Credentials.from_service_account_file(
+#                 GOOGLE_SHEETS_CREDENTIALS_FILE, scopes=scope
 #             )
-#             worksheet.update('A1:E1', [[
-#                 'Timestamp (IST)', 'Category', 'Title', 'Script', 'Source Link'
-#             ]])
-#             worksheet.format('A1:E1', {
+#             client = gspread.authorize(creds)
+
+#             try:
+#                 sheet = client.open(GOOGLE_SHEET_NAME)
+#                 print(f"✅ Connected: '{GOOGLE_SHEET_NAME}'")
+#             except gspread.SpreadsheetNotFound:
+#                 sheet = client.create(GOOGLE_SHEET_NAME)
+#                 print(f"✅ Created: '{GOOGLE_SHEET_NAME}'")
+
+#             try:
+#                 worksheet = sheet.worksheet(GOOGLE_WORKSHEET_NAME)
+#                 print(f"✅ Worksheet: '{GOOGLE_WORKSHEET_NAME}'")
+#                 current_rows = worksheet.row_count
+#                 if current_rows < 2000:
+#                     worksheet.add_rows(5000 - current_rows)
+#                     print(f"✅ Expanded sheet: {current_rows} → 5000 rows")
+#                 else:
+#                     print(f"✅ Sheet has {current_rows} rows — OK")
+
+#             except gspread.WorksheetNotFound:
+#                 worksheet = sheet.add_worksheet(
+#                     title=GOOGLE_WORKSHEET_NAME, rows=5000, cols=10
+#                 )
+#                 worksheet.update('A1:E1', [[
+#                     'Timestamp (IST)', 'Category', 'Title', 'Script', 'Source Link'
+#                 ]])
+#                 worksheet.format('A1:E1', {
+#                     'textFormat': {
+#                         'bold': True,
+#                         'foregroundColor': {'red': 1.0, 'green': 1.0, 'blue': 1.0}
+#                     },
+#                     'backgroundColor': {'red': 0.0, 'green': 0.5, 'blue': 0.3},
+#                     'horizontalAlignment': 'CENTER'
+#                 })
+#                 worksheet.set_column_width('A', 200)
+#                 worksheet.set_column_width('B', 150)
+#                 worksheet.set_column_width('C', 400)
+#                 worksheet.set_column_width('D', 600)
+#                 worksheet.set_column_width('E', 400)
+#                 print(f"✅ Created worksheet with headers")
+
+#             return worksheet
+
+#         except gspread.exceptions.APIError as e:
+#             error_str = str(e)
+#             if any(code in error_str for code in ['503', '500', '429', '502']):
+#                 if attempt < max_retries:
+#                     print(f"⚠️ Google Sheets error (attempt {attempt}/{max_retries}) — retrying in {retry_delay}s...")
+#                     time.sleep(retry_delay)
+#                     continue
+#                 else:
+#                     print(f"❌ Google Sheets unavailable after {max_retries} attempts: {e}")
+#                     return None
+#             else:
+#                 print(f"❌ Sheets API error (non-retryable): {e}")
+#                 return None
+#         except FileNotFoundError:
+#             print(f"❌ credentials.json not found!")
+#             return None
+#         except Exception as e:
+#             print(f"❌ Sheets setup error: {e}")
+#             import traceback
+#             traceback.print_exc()
+#             return None
+
+
+# # ============================================================
+# # Save to Google Sheets — with retry
+# # ============================================================
+# def save_to_google_sheets(worksheet, category, title, script, source_link, max_retries: int = 3):
+#     for attempt in range(1, max_retries + 1):
+#         try:
+#             timestamp = datetime.now(IST).strftime('%Y-%m-%d %H:%M:%S IST')
+
+#             script = '\n'.join(str(i) for i in script) if isinstance(script, list) else str(script).strip()
+#             script = script.replace('[', '').replace(']', '')
+#             title = str(title).strip()
+#             source_link = str(source_link).strip()
+#             category = str(category).strip().lower()
+
+#             if category not in VALID_CATEGORIES:
+#                 category = "general"
+
+#             next_row = len(worksheet.get_all_values()) + 1
+#             worksheet.append_row(
+#                 [timestamp, category, title, script, source_link],
+#                 value_input_option='RAW'
+#             )
+
+#             worksheet.format(f'A{next_row}:E{next_row}', {
+#                 'textFormat': {
+#                     'foregroundColor': {'red': 0.0, 'green': 0.0, 'blue': 0.0},
+#                     'fontSize': 10
+#                 },
+#                 'backgroundColor': {'red': 1.0, 'green': 1.0, 'blue': 1.0},
+#                 'wrapStrategy': 'WRAP',
+#                 'verticalAlignment': 'TOP'
+#             })
+
+#             category_colors = {
+#                 'crime':         {'red': 0.95, 'green': 0.8,  'blue': 0.8},
+#                 'politics':      {'red': 0.8,  'green': 0.9,  'blue': 1.0},
+#                 'sports':        {'red': 0.8,  'green': 1.0,  'blue': 0.8},
+#                 'entertainment': {'red': 1.0,  'green': 0.9,  'blue': 0.8},
+#                 'education':     {'red': 0.9,  'green': 0.95, 'blue': 1.0},
+#                 'economy':       {'red': 0.95, 'green': 1.0,  'blue': 0.85},
+#                 'horror':        {'red': 0.7,  'green': 0.7,  'blue': 0.7},
+#                 'general':       {'red': 1.0,  'green': 1.0,  'blue': 0.9}
+#             }
+#             worksheet.format(f'B{next_row}', {
 #                 'textFormat': {
 #                     'bold': True,
-#                     'foregroundColor': {'red': 1.0, 'green': 1.0, 'blue': 1.0}
+#                     'foregroundColor': {'red': 0.0, 'green': 0.0, 'blue': 0.0},
+#                     'fontSize': 10
 #                 },
-#                 'backgroundColor': {'red': 0.2, 'green': 0.6, 'blue': 0.9},
+#                 'backgroundColor': category_colors.get(category, category_colors['general']),
 #                 'horizontalAlignment': 'CENTER'
 #             })
-#             worksheet.set_column_width('A', 200)
-#             worksheet.set_column_width('B', 150)
-#             worksheet.set_column_width('C', 400)
-#             worksheet.set_column_width('D', 600)
-#             worksheet.set_column_width('E', 400)
-#             print(f"✅ Created worksheet with headers")
 
-#         return worksheet
+#             print(f"✅ Saved [{category.upper()}] {title[:50]}...")
+#             return True
 
-#     except FileNotFoundError:
-#         print(f"❌ credentials.json not found!")
-#         return None
-#     except Exception as e:
-#         print(f"❌ Sheets setup error: {e}")
-#         import traceback
-#         traceback.print_exc()
-#         return None
-
-
-# # ============================================================
-# # Save to Google Sheets
-# # ============================================================
-# def save_to_google_sheets(worksheet, category, title, script, source_link):
-#     try:
-#         timestamp = datetime.now(IST).strftime('%Y-%m-%d %H:%M:%S IST')
-
-#         script = '\n'.join(str(i) for i in script) if isinstance(script, list) else str(script).strip()
-#         script = script.replace('[', '').replace(']', '')
-#         title = str(title).strip()
-#         source_link = str(source_link).strip()
-#         category = str(category).strip().lower()
-
-#         if category not in VALID_CATEGORIES:
-#             category = "general"
-
-#         next_row = len(worksheet.get_all_values()) + 1
-#         worksheet.append_row(
-#             [timestamp, category, title, script, source_link],
-#             value_input_option='RAW'
-#         )
-
-#         worksheet.format(f'A{next_row}:E{next_row}', {
-#             'textFormat': {
-#                 'foregroundColor': {'red': 0.0, 'green': 0.0, 'blue': 0.0},
-#                 'fontSize': 10
-#             },
-#             'backgroundColor': {'red': 1.0, 'green': 1.0, 'blue': 1.0},
-#             'wrapStrategy': 'WRAP',
-#             'verticalAlignment': 'TOP'
-#         })
-
-#         category_colors = {
-#             'crime':         {'red': 0.95, 'green': 0.8,  'blue': 0.8},
-#             'politics':      {'red': 0.8,  'green': 0.9,  'blue': 1.0},
-#             'sports':        {'red': 0.8,  'green': 1.0,  'blue': 0.8},
-#             'entertainment': {'red': 1.0,  'green': 0.9,  'blue': 0.8},
-#             'education':     {'red': 0.9,  'green': 0.95, 'blue': 1.0},
-#             'economy':       {'red': 0.95, 'green': 1.0,  'blue': 0.85},
-#             'horror':        {'red': 0.7,  'green': 0.7,  'blue': 0.7},
-#             'general':       {'red': 1.0,  'green': 1.0,  'blue': 0.9}
-#         }
-#         worksheet.format(f'B{next_row}', {
-#             'textFormat': {
-#                 'bold': True,
-#                 'foregroundColor': {'red': 0.0, 'green': 0.0, 'blue': 0.0},
-#                 'fontSize': 10
-#             },
-#             'backgroundColor': category_colors.get(category, category_colors['general']),
-#             'horizontalAlignment': 'CENTER'
-#         })
-
-#         print(f"✅ Saved [{category.upper()}] {title[:50]}...")
-#         return True
-
-#     except Exception as e:
-#         print(f"❌ Save error: {e}")
-#         return False
+#         except gspread.exceptions.APIError as e:
+#             error_str = str(e)
+#             if any(code in error_str for code in ['503', '500', '429', '502']):
+#                 if attempt < max_retries:
+#                     print(f"   ⚠️ Sheets 503 on save (attempt {attempt}/{max_retries}) — retrying in 8s...")
+#                     time.sleep(8)
+#                     continue
+#                 else:
+#                     print(f"   ❌ Save failed after {max_retries} retries: {e}")
+#                     return False
+#             print(f"❌ Save error: {e}")
+#             return False
+#         except Exception as e:
+#             print(f"❌ Save error: {e}")
+#             return False
 
 
 # # ============================================================
@@ -309,10 +385,6 @@
 # # Safe API Response Extractor
 # # ============================================================
 # def extract_response_content(response) -> str:
-#     """
-#     Safely extract text content from Perplexity API response,
-#     handling all known response formats including list-type content blocks.
-#     """
 #     raw_choice = response.choices[0]
 
 #     if hasattr(raw_choice, 'message'):
@@ -480,9 +552,90 @@
 
 
 # # ============================================================
-# # Scraping
+# # Perplexity Thane News Search
+# # Used as FALLBACK if scraped articles < TARGET_SCRIPTS
 # # ============================================================
-# async def scrape_multiple_marathi_sources():
+# async def fetch_thane_news_via_perplexity(needed: int) -> List[Dict]:
+#     global total_input_tokens, total_output_tokens, total_cost
+
+#     print(f"\n🔎 Fetching {needed} more Thane news via Perplexity search...")
+
+#     try:
+#         response = perplexity_client.chat.completions.create(
+#             model=ANALYSIS_MODEL,
+#             messages=[
+#                 {
+#                     "role": "system",
+#                     "content": "You are a Marathi news researcher. Return ONLY valid JSON array."
+#                 },
+#                 {
+#                     "role": "user",
+#                     "content": f"""Search for the latest {needed} news articles specifically from Thane district, Maharashtra, India (including Thane city, Kalyan, Dombivli, Bhiwandi, Mira-Bhayandar, Navi Mumbai, Ulhasnagar, Ambarnath, Badlapur).
+
+# Return a JSON array with exactly {needed} items:
+# [{{
+#   "title": "Marathi news title",
+#   "detailed_summary": "150-200 word Marathi summary of the news",
+#   "category": "crime/politics/sports/general/economy/entertainment/education/horror",
+#   "importance": "high/medium/low",
+#   "key_points": ["point1", "point2", "point3"],
+#   "link": "source URL if known, else empty string"
+# }}]
+
+# Rules:
+# - All news MUST be from Thane district only
+# - detailed_summary must be in Marathi
+# - Return only the JSON array, no extra text
+# - Use the most recent news available"""
+#                 }
+#             ],
+#             temperature=0.3,
+#             max_tokens=4000
+#         )
+
+#         if hasattr(response, 'usage'):
+#             i_t = response.usage.prompt_tokens
+#             o_t = response.usage.completion_tokens
+#             total_input_tokens  += i_t
+#             total_output_tokens += o_t
+#             c = (i_t * ANALYSIS_INPUT_COST) + (o_t * ANALYSIS_OUTPUT_COST)
+#             total_cost += c
+#             print(f"   📊 Perplexity search: {i_t}in + {o_t}out = ${c:.4f}")
+
+#         content = extract_response_content(response)
+#         content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL).strip()
+#         match = re.search(r'\[.*\]', content, re.DOTALL)
+
+#         if match:
+#             parsed = json.loads(match.group())
+#             results = []
+#             for art in parsed:
+#                 if art.get('category') not in VALID_CATEGORIES:
+#                     art['category'] = 'general'
+#                 art['source']     = 'Perplexity Search'
+#                 art['scraped_at'] = datetime.now(IST).isoformat()
+#                 art['hash']       = get_content_hash(
+#                     art.get('title', ''), art.get('detailed_summary', '')
+#                 )
+#                 results.append(art)
+#             print(f"   ✅ Got {len(results)} articles from Perplexity search")
+#             return results
+#         else:
+#             print(f"   ⚠️ No JSON in Perplexity search response")
+#             return []
+
+#     except Exception as e:
+#         error_str = str(e).lower()
+#         if any(code in error_str for code in ['402', '429', 'credit', 'quota', 'insufficient']):
+#             raise CreditExhaustedException(str(e))
+#         print(f"   ❌ Perplexity search error: {e}")
+#         return []
+
+
+# # ============================================================
+# # Scraping — Thane-specific sites
+# # ============================================================
+# async def scrape_thane_sources():
 #     all_news = []
 
 #     async with AsyncWebCrawler(verbose=False) as crawler:
@@ -521,22 +674,7 @@
 
 #                     if (15 < len(title) < 300 and
 #                         site['link_pattern'] in href and
-#                         not any(x in href.lower() for x in [
-#                             'javascript:', 'mailto:', '#',
-#                             '/category/', '/tag/', '/author/',
-#                             'facebook.com', 'twitter.com', 'instagram.com',
-#                             'youtube.com', 'whatsapp.com', '/myaccount/',
-#                             '/install_app', '/advertisement', '/epaper',
-#                             'web-stories', 'photo-gallery', '/videos/',
-#                             '/games/', '/jokes/', '/terms-and-conditions',
-#                             '/topic/', '/widget/', '/livetv',
-#                             'articlelist', '/live',
-#                             '/utility/', '/utilities/',
-#                             '/adhyatma/', '/astrology/', '/rashifal/',
-#                             '/horoscope/', '/jyotish/', '/puja/',
-#                             '/dharm/', '/dharma/', '/spirituality/',
-#                             '/rashibhavishya/', '/religion/'
-#                         ])):
+#                         not any(x in href.lower() for x in SKIP_URL_PATTERNS)):
 
 #                         if href.startswith('/'):
 #                             base = (site['url'].split('/') + '//'
@@ -564,6 +702,11 @@
 
 #                     markdown = await fetch_article_with_retry(crawler, article['link'])
 #                     content  = markdown if markdown else article['title']
+
+#                     # ✅ STRICT Thane filter
+#                     if not is_thane_related(article['title'], content):
+#                         print(f"   🚫 Not Thane-related — skipped")
+#                         continue
 
 #                     if any(kw.lower() in content.lower() for kw in SKIP_CONTENT_KEYWORDS):
 #                         print(f"   ⏭️  Skipped (utility/spiritual content)")
@@ -597,6 +740,8 @@
 #                     all_news.extend(filtered)
 #                     print(f"🧠 {site['name']}: Analyzed {len(filtered)} articles")
 
+#             except CreditExhaustedException:
+#                 raise
 #             except Exception as e:
 #                 print(f"❌ Error {site['name']}: {e}")
 
@@ -633,7 +778,7 @@
 #         for idx, article in enumerate(batch):
 #             articles_text += f"INDEX_{idx}: {article['title']}\n{safe_truncate(article['content'], 500)}\n---\n"
 
-#         prompt = f"""मराठी बातम्या विश्लेषक: खालील बातम्यांना category आणि Marathi summary द्या.
+#         prompt = f"""मराठी बातम्या विश्लेषक: खालील ठाणे जिल्ह्यातील बातम्यांना category आणि Marathi summary द्या.
 
 # ⚠️ नियम:
 # 1. detailed_summary आणि key_points फक्त मराठीत लिहा
@@ -673,12 +818,10 @@
 #                 total_cost += c
 #                 print(f"   📊 {i_t}in + {o_t}out = ${c:.4f}")
 
-#             # ✅ Safe extraction
 #             content = extract_response_content(response)
 
 #             if not content.strip():
 #                 print(f"   ⚠️ Empty response! type: {type(response.choices)}")
-#                 print(f"   ⚠️ dump: {str(response.choices)[:300]}")
 #                 raise ValueError("Empty content from API")
 
 #             content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL).strip()
@@ -734,10 +877,8 @@
 #             if any(code in error_str for code in [
 #                 '402', '429', 'credit', 'quota', 'insufficient', 'balance', 'billing'
 #             ]):
-#                 print(f"\n💳 CREDITS EXHAUSTED during analysis!")
 #                 raise CreditExhaustedException(str(e))
 #             print(f"   ❌ AI error: {e}")
-#             # ✅ Fallback with real content — never loses articles
 #             for i, article in enumerate(batch):
 #                 all_filtered.append({
 #                     'index':            i,
@@ -762,20 +903,20 @@
 
 
 # # ============================================================
-# # Script Generation
+# # Script Generation — Thane-focused prompts
 # # ============================================================
 # async def create_reel_script_single(news_article: Dict):
 #     global total_input_tokens, total_output_tokens, total_cost
 
 #     category = news_article.get('category', 'general')
 
-#     system_prompt = f"""तुम्ही एक मराठी Instagram Reel script writer आहात.
+#     system_prompt = f"""तुम्ही एक मराठी Instagram Reel script writer आहात जे ठाणे जिल्ह्यातील बातम्यांवर content बनवतात.
 # फक्त मराठी भाषेत लिहा. हिंदी, इंग्रजी किंवा स्वतःची ओळख करून देऊ नका.
 # तुम्ही AI आहात हे कधीही सांगू नका. फक्त script लिहा.
 
 # Structure (15-18 lines total):
-# - Line 1-2: धक्कादायक hook (घटनेची सुरुवात)
-# - Line 3-10: सर्व facts (नावे, ठिकाण, तारीख, संख्या सह)
+# - Line 1-2: धक्कादायक hook — ठाणे/परिसरातील घटनेची सुरुवात
+# - Line 3-10: सर्व facts (नावे, ठिकाण, तारीख, संख्या सह — ठाण्याचा उल्लेख अवश्य)
 # - Line 11-14: प्रश्न / विश्लेषण / ट्विस्ट
 # - Line 15-18: CTA
 
@@ -786,7 +927,8 @@
 # - माहिती कमी असेल तर उपलब्ध facts stretch करा
 # - "माहिती नाही", "खेद आहे", "मी Perplexity" असे कधीही लिहू नका
 # - शेवटची line नक्की हीच: "{SCRIPT_CTA}"
-# - script अर्धवट सोडू नका — शेवटपर्यंत लिहा"""
+# - script अर्धवट सोडू नका — शेवटपर्यंत लिहा
+# - ठाणे शहर/जिल्ह्याचा उल्लेख script मध्ये कमीत कमी एकदा अवश्य करा"""
 
 #     summary    = safe_truncate(
 #         news_article.get('detailed_summary', news_article.get('title', '')), 600
@@ -798,14 +940,15 @@
 # सारांश: {summary}
 # मुद्दे: {key_points}
 
-# वरील बातमीचे facts वापरून 15-18 मराठी lines तयार करा.
+# वरील ठाणे जिल्ह्यातील बातमीचे facts वापरून 15-18 मराठी lines तयार करा.
 # शेवटची line नक्की: "{SCRIPT_CTA}"
 # जरी माहिती कमी असली तरी उपलब्ध तथ्यांवर आधारित पूर्ण script लिहा."""
 
-#     user_prompt_v2 = f"""खालील बातमीवर 15 मराठी वाक्ये लिहा.
+#     user_prompt_v2 = f"""खालील ठाणे जिल्ह्यातील बातमीवर 15 मराठी वाक्ये लिहा.
 # बातमी: {news_article['title']}. {safe_truncate(summary, 200)}
 # - प्रत्येक वाक्य नवीन line वर लिहा
 # - फक्त मराठीत लिहा, हिंदी/इंग्रजी नको
+# - ठाण्याचा उल्लेख कमीत कमी एकदा करा
 # - शेवटची line नक्की: "{SCRIPT_CTA}" """
 
 #     prompts = [user_prompt_v1, user_prompt_v2]
@@ -829,7 +972,6 @@
 #                 total_output_tokens += o_t
 #                 total_cost += (i_t * SCRIPT_INPUT_COST) + (o_t * SCRIPT_OUTPUT_COST)
 
-#             # ✅ Safe extraction
 #             script = extract_response_content(response).strip()
 #             script = re.sub(r'<think>.*?</think>', '', script, flags=re.DOTALL).strip()
 #             script = script.replace('```', '').strip()
@@ -856,7 +998,7 @@
 #             await asyncio.sleep(2)
 
 #     # Last-resort fallback with real article content
-#     title   = news_article.get('title', 'एक महत्त्वाची बातमी')[:80]
+#     title   = news_article.get('title', 'ठाण्यातील एक महत्त्वाची बातमी')[:80]
 #     summary = safe_truncate(
 #         news_article.get('detailed_summary', news_article.get('title', '')), 200
 #     )
@@ -864,15 +1006,15 @@
 
 # {summary}
 
-# ही घटना राज्यात मोठी चर्चा निर्माण करत आहे.
+# ही घटना ठाण्यात मोठी चर्चा निर्माण करत आहे.
 
 # या प्रकरणात अनेक महत्त्वाचे प्रश्न उपस्थित होत आहेत.
 
-# संबंधित यंत्रणांनी याबाबत तातडीने उत्तर देणे आवश्यक आहे.
+# ठाणे प्रशासनाने याबाबत तातडीने उत्तर देणे आवश्यक आहे.
 
-# सर्वसामान्य जनतेवर या घटनेचा थेट परिणाम होणार आहे.
+# ठाण्यातील सर्वसामान्य नागरिकांवर या घटनेचा थेट परिणाम होणार आहे.
 
-# विरोधी पक्षाने या मुद्द्यावर सरकारला धारेवर धरले आहे.
+# विरोधी पक्षाने या मुद्द्यावर ठाणे प्रशासनाला धारेवर धरले आहे.
 
 # येत्या काळात या प्रकरणात मोठी उलथापालथ होण्याची शक्यता आहे.
 
@@ -888,10 +1030,10 @@
 #     global total_input_tokens, total_output_tokens, total_cost
 
 #     print("=" * 70)
-#     print("🚀 JABARI KHABRI - SMART NEWS SCRAPER v10.0")
+#     print("🚀 SALAM THANE - NEWS SCRAPER v1.0")
 #     print(f"🔍 Analysis : {ANALYSIS_MODEL}")
 #     print(f"✍️  Scripts  : {SCRIPT_MODEL}")
-#     print(f"🎯 Target   : {TARGET_SCRIPTS} scripts")
+#     print(f"🎯 Target   : {TARGET_SCRIPTS} scripts (Thane Only)")
 #     print(f"🕐 Timezone : IST (Asia/Kolkata)")
 #     print("=" * 70)
 
@@ -904,15 +1046,16 @@
 #     start_time = datetime.now(IST)
 
 #     print("\n" + "=" * 70)
-#     print("STEP 1: SCRAPING 5 MARATHI NEWS SITES")
+#     print("STEP 1: SCRAPING THANE NEWS SITES")
 #     print("=" * 70 + "\n")
 
 #     try:
-#         all_articles = await scrape_multiple_marathi_sources()
+#         all_articles = await scrape_thane_sources()
 #     except CreditExhaustedException:
 #         print("\n🛑 Credits exhausted during scraping. Stopping.")
 #         return
 
+#     # De-duplicate
 #     unique_articles = []
 #     seen_hashes = set()
 #     for article in all_articles:
@@ -923,7 +1066,23 @@
 #             unique_articles.append(article)
 #             seen_hashes.add(h)
 
-#     print(f"\n✅ Total unique articles: {len(unique_articles)}")
+#     print(f"\n✅ Thane articles scraped: {len(unique_articles)}")
+
+#     # ✅ Perplexity fallback if scraping gave fewer than target
+#     if len(unique_articles) < TARGET_SCRIPTS:
+#         needed = TARGET_SCRIPTS - len(unique_articles)
+#         print(f"⚡ Only {len(unique_articles)} scraped — fetching {needed} more via Perplexity AI search...")
+#         try:
+#             extra = await fetch_thane_news_via_perplexity(needed)
+#             for art in extra:
+#                 h = art.get('hash', '')
+#                 if h not in seen_hashes:
+#                     unique_articles.append(art)
+#                     seen_hashes.add(h)
+#         except CreditExhaustedException:
+#             print("🛑 Credits exhausted during Perplexity fallback.")
+
+#     print(f"\n✅ Total unique Thane articles: {len(unique_articles)}")
 
 #     if len(unique_articles) < TARGET_SCRIPTS:
 #         print(f"⚠️  Only {len(unique_articles)} articles found — "
@@ -955,7 +1114,7 @@
 #     if worksheet and selected_articles:
 #         for idx, article in enumerate(selected_articles, 1):
 #             print(f"\n[{idx:02d}/{len(selected_articles)}] "
-#                   f"{article.get('source','')[:12]} | "
+#                   f"{article.get('source','')[:14]} | "
 #                   f"{article.get('category','').upper():<13} | "
 #                   f"{article['title'][:40]}...")
 
@@ -993,11 +1152,11 @@
 #     total_tokens   = total_input_tokens + total_output_tokens
 
 #     print("\n" + "=" * 70)
-#     print("📈 FINAL SUMMARY")
+#     print("📈 FINAL SUMMARY — SALAM THANE")
 #     print("=" * 70)
 #     print(f"   🔍 Analysis model     : {ANALYSIS_MODEL}")
 #     print(f"   ✍️  Script model       : {SCRIPT_MODEL}")
-#     print(f"   📰 Articles scraped   : {len(unique_articles)}")
+#     print(f"   📰 Thane articles     : {len(unique_articles)}")
 #     print(f"   ✅ Scripts saved      : {successful_saves}")
 #     print(f"   ❌ Failed             : {failed_saves}")
 #     print(f"   ⏱️  Total time         : {total_duration:.0f}s ({total_duration/60:.1f} mins)")
@@ -1015,7 +1174,6 @@
 
 # if __name__ == "__main__":
 #     asyncio.run(main())
-
 
 
 
@@ -1064,28 +1222,31 @@ IST = pytz.timezone('Asia/Kolkata')
 # ============================================================
 # Config
 # ============================================================
+# GOOGLE_SHEETS_CREDENTIALS_FILE = "credentials.json"
+# GOOGLE_SHEET_NAME               = "Salaam Thane Scripts"
+# GOOGLE_WORKSHEET_NAME           = "Scripts"
 GOOGLE_SHEETS_CREDENTIALS_FILE = "credentials.json"
 GOOGLE_SHEET_NAME               = "Salam Thane"
 GOOGLE_WORKSHEET_NAME           = "Sheet1"
-TARGET_SCRIPTS                  = 10
-
-# Thane-specific keywords — article MUST contain at least one
-THANE_KEYWORDS = [
-    'ठाणे', 'thane', 'kalyan', 'कल्याण', 'dombivli', 'डोंबिवली',
-    'ambarnath', 'अंबरनाथ', 'badlapur', 'बदलापूर', 'ulhasnagar',
-    'उल्हासनगर', 'bhiwandi', 'भिवंडी', 'mira road', 'मीरा रोड',
-    'mira-bhayandar', 'मीरा-भाईंदर', 'shahapur', 'शहापूर',
-    'titwala', 'टिटवाळा', 'navi mumbai', 'नवी मुंबई', 'belapur',
-    'kharghar', 'panvel', 'पनवेल', 'vashi', 'nerul', 'kopar khairane',
-    'airoli', 'ghansoli', 'turbhe', 'sanpada', 'juinagar',
-    'thane district', 'ठाणे जिल्हा', 'ठाणे महापालिका', 'TMC',
-    'ठाणे पोलीस', 'thane police', 'ठाणे रेल्वे', 'thane station',
-]
+TARGET_SCRIPTS = 20
 
 VALID_CATEGORIES = [
-    "sports", "general", "crime", "politics",
-    "education", "economy", "entertainment", "horror"
+    "crime", "environment", "development", "local_events",
+    "health", "achievement", "politics", "general"
 ]
+
+# ✅ Dynamic CTA — different per category (confirmed from real audio analysis)
+CATEGORY_CTA = {
+    "crime":        "या प्रकरणावर तुम्हाला काय वाटतं? कमेंट्स मध्ये नक्की सांगा आणि अशाच महत्त्वाच्या अपडेटसाठी फॉलो करा सलाम ठाणे.",
+    "environment":  "तुम्हाला काय वाटतं? कमेंट्स मध्ये नक्की सांगा आणि अशाच महत्त्वाच्या अपडेटसाठी फॉलो करा सलाम ठाणे.",
+    "development":  "तुमचं या विकासकामाबद्दल काय मत आहे? कमेंट्स मध्ये सांगा आणि अशाच अपडेटसाठी फॉलो करा सलाम ठाणे.",
+    "local_events": "तुम्ही यात सहभागी होणार का? कमेंट्स मध्ये सांगा आणि अशाच झन्नाट अपडेट साठी फॉलो करा सलाम ठाणे.",
+    "health":       "तुम्हाला हा उपक्रम कसा वाटला? कमेंट्स मध्ये सांगा आणि अशाच भन्नाट अपडेटसाठी फॉलो करा सलाम ठाणे.",
+    "achievement":  "या ऐतिहासिक क्षणाबद्दल तुमचं काय मत आहे? कमेंट्स मध्ये सांगा आणि अशाच अपडेटसाठी फॉलो करा सलाम ठाणे.",
+    "politics":     "या राजकारणाबद्दल तुम्हाला काय वाटतं? कमेंट्स मध्ये नक्की सांगा आणि अशाच महत्त्वाच्या अपडेटसाठी फॉलो करा सलाम ठाणे.",
+    "general":      "तुम्हाला काय वाटतं? कमेंट्स मध्ये सांगा आणि अशाच अपडेटसाठी फॉलो करा सलाम ठाणे.",
+}
+DEFAULT_CTA = "तुम्हाला काय वाटतं? कमेंट्स मध्ये सांगा आणि अशाच अपडेटसाठी फॉलो करा सलाम ठाणे."
 
 REFUSAL_KEYWORDS = [
     "I appreciate", "I should clarify", "I'm Perplexity",
@@ -1111,7 +1272,7 @@ SKIP_TITLE_KEYWORDS = [
     'horoscope', 'rashifal', 'astrology', 'dharm', 'puja',
     'utility', 'यूटिलिटी', 'आध्यात्मिक', 'spirituality',
     'धार्मिक परंपरा', 'मंदिर', 'व्रत', 'उपवास', 'rashibhavishya',
-    'अध्यात्म बातम्या', 'धार्मिक', 'ज्योतिष'
+    'धार्मिक', 'ज्योतिष', 'recipe', 'cooking', 'फॅशन',
 ]
 
 SKIP_CONTENT_KEYWORDS = [
@@ -1119,9 +1280,18 @@ SKIP_CONTENT_KEYWORDS = [
     'अध्यात्म बातम्यांचा विशेष विभाग आहे जो',
     'राशीभविष्य, मंदिरातील पूजा, धार्मिक परंपरा',
     'आध्यात्मिक जीवनाची संपूर्ण माहिती',
-    'धार्मिक आणि आध्यात्मिक विषयांवर सर्वांग माहिती',
     'यूटिलिटी बातम्या म्हणजे काय',
     'utility news definition'
+]
+
+# ✅ Thane district keywords — for filtering Thane-relevant content
+THANE_KEYWORDS = [
+    'thane', 'ठाण', 'dombivli', 'डोंबिवली', 'kalyan', 'कल्याण',
+    'bhiwandi', 'भिवंडी', 'ulhasnagar', 'उल्हासनगर',
+    'mira-road', 'miraroad', 'मीरा रोड', 'ambernath', 'अंबरनाथ',
+    'badlapur', 'बदलापूर', 'titwala', 'टिटवाळा',
+    'shahad', 'vithalwadi', 'kdmc', 'tmc', 'kopri', 'mumbra',
+    'wagle', 'varsova', 'majiwada', 'kasarwadavali', 'palghar'
 ]
 
 SKIP_URL_PATTERNS = [
@@ -1139,9 +1309,11 @@ SKIP_URL_PATTERNS = [
     '/horoscope/', '/jyotish/', '/puja/',
     '/dharm/', '/dharma/', '/spirituality/',
     '/rashibhavishya/', '/religion/',
+    '/north', '/south', '/west', '/east',
+    '/nashik', '/aurangabad', '/nagpur', '/konkan',
+    '/vidarbha', '/marathwada',
+    '/pune', '/solapur', '/kolhapur', '/satara',
 ]
-
-SCRIPT_CTA = "तुमचं काय मत आहे? कमेंट करून सांगा आणि फॉलो करा सलाम ठाणे."
 
 
 # ============================================================
@@ -1154,68 +1326,50 @@ processed_hashes    = set()
 
 
 # ============================================================
-# Thane-Specific News Sites
-# These URLs are Thane-focused sections of major news portals
+# News Sites — Thane-Specific Sources (5+4+4+4+3 = 20)
 # ============================================================
 NEWS_SITES = [
     {
-        "name": "Maharashtra Times - Thane",
+        "name": "Maharashtra Times Thane",
         "url": "https://maharashtratimes.com/maharashtra/thane-news",
         "link_pattern": "maharashtratimes.com",
-        "target": 3,
-        "fetch_limit": 30
+        "thane_strict": False,
+        "target": 5,
+        "fetch_limit": 35
     },
     {
-        "name": "Lokmat - Thane",
+        "name": "Lokmat Thane",
         "url": "https://www.lokmat.com/thane/",
         "link_pattern": "lokmat.com",
-        "target": 3,
+        "thane_strict": False,
+        "target": 4,
         "fetch_limit": 30
     },
     {
-        "name": "TV9 Marathi - Thane",
-        "url": "https://www.tv9marathi.com/maharashtra/thane",
-        "link_pattern": "tv9marathi.com",
-        "target": 2,
-        "fetch_limit": 25
-    },
-    {
-        "name": "ABP Majha - Thane",
-        "url": "https://marathi.abplive.com/news/thane",
+        "name": "ABP Majha Thane",
+        "url": "https://marathi.abplive.com/district/thane",
         "link_pattern": "abplive.com",
-        "target": 2,
-        "fetch_limit": 25
+        "thane_strict": False,
+        "target": 4,
+        "fetch_limit": 30
     },
     {
-        "name": "NDTV Marathi - Thane",
-        "url": "https://marathi.ndtv.com/thane",
-        "link_pattern": "marathi.ndtv.com",
-        "target": 2,
-        "fetch_limit": 25
+        "name": "TV9 Marathi Thane",
+        "url": "https://www.tv9marathi.com/city/thane",
+        "link_pattern": "tv9marathi.com",
+        "thane_strict": False,
+        "target": 4,
+        "fetch_limit": 30
     },
     {
-        "name": "Thane Live",
-        "url": "https://www.thanelive.com/latest-news/",
-        "link_pattern": "thanelive.com",
-        "target": 2,
-        "fetch_limit": 25
+        "name": "Navshakti Thane",
+        "url": "https://www.navshakti.co.in/thane/",
+        "link_pattern": "navshakti.co.in",
+        "thane_strict": False,
+        "target": 3,
+        "fetch_limit": 20
     },
-    {
-        "name": "My Thane",
-        "url": "https://www.mythane.in/category/news/",
-        "link_pattern": "mythane.in",
-        "target": 2,
-        "fetch_limit": 25
-    }
 ]
-
-
-# ============================================================
-# Thane Filter — STRICT: title OR content must mention Thane
-# ============================================================
-def is_thane_related(title: str, content: str) -> bool:
-    combined = (title + ' ' + content[:1000]).lower()
-    return any(kw.lower() in combined for kw in THANE_KEYWORDS)
 
 
 # ============================================================
@@ -1257,12 +1411,13 @@ def setup_google_sheets(max_retries: int = 5, retry_delay: int = 10):
                 worksheet.update('A1:E1', [[
                     'Timestamp (IST)', 'Category', 'Title', 'Script', 'Source Link'
                 ]])
+                # ✅ Salaam Thane green header
                 worksheet.format('A1:E1', {
                     'textFormat': {
                         'bold': True,
                         'foregroundColor': {'red': 1.0, 'green': 1.0, 'blue': 1.0}
                     },
-                    'backgroundColor': {'red': 0.0, 'green': 0.5, 'blue': 0.3},
+                    'backgroundColor': {'red': 0.0, 'green': 0.5, 'blue': 0.25},
                     'horizontalAlignment': 'CENTER'
                 })
                 worksheet.set_column_width('A', 200)
@@ -1278,7 +1433,7 @@ def setup_google_sheets(max_retries: int = 5, retry_delay: int = 10):
             error_str = str(e)
             if any(code in error_str for code in ['503', '500', '429', '502']):
                 if attempt < max_retries:
-                    print(f"⚠️ Google Sheets error (attempt {attempt}/{max_retries}) — retrying in {retry_delay}s...")
+                    print(f"⚠️ Google Sheets {error_str[:20]} (attempt {attempt}/{max_retries}) — retrying in {retry_delay}s...")
                     time.sleep(retry_delay)
                     continue
                 else:
@@ -1330,15 +1485,16 @@ def save_to_google_sheets(worksheet, category, title, script, source_link, max_r
                 'verticalAlignment': 'TOP'
             })
 
+            # ✅ Salaam Thane category colour palette
             category_colors = {
-                'crime':         {'red': 0.95, 'green': 0.8,  'blue': 0.8},
-                'politics':      {'red': 0.8,  'green': 0.9,  'blue': 1.0},
-                'sports':        {'red': 0.8,  'green': 1.0,  'blue': 0.8},
-                'entertainment': {'red': 1.0,  'green': 0.9,  'blue': 0.8},
-                'education':     {'red': 0.9,  'green': 0.95, 'blue': 1.0},
-                'economy':       {'red': 0.95, 'green': 1.0,  'blue': 0.85},
-                'horror':        {'red': 0.7,  'green': 0.7,  'blue': 0.7},
-                'general':       {'red': 1.0,  'green': 1.0,  'blue': 0.9}
+                'crime':        {'red': 0.95, 'green': 0.8,  'blue': 0.8},
+                'environment':  {'red': 0.8,  'green': 0.95, 'blue': 0.8},
+                'development':  {'red': 0.8,  'green': 0.9,  'blue': 1.0},
+                'local_events': {'red': 1.0,  'green': 0.9,  'blue': 0.8},
+                'health':       {'red': 0.85, 'green': 0.95, 'blue': 0.95},
+                'achievement':  {'red': 1.0,  'green': 0.95, 'blue': 0.7},
+                'politics':     {'red': 0.9,  'green': 0.85, 'blue': 1.0},
+                'general':      {'red': 1.0,  'green': 1.0,  'blue': 0.9},
             }
             worksheet.format(f'B{next_row}', {
                 'textFormat': {
@@ -1401,12 +1557,17 @@ def safe_truncate(text: str, max_chars: int) -> str:
     return truncated
 
 
-# ============================================================
-# Safe API Response Extractor
-# ============================================================
+def get_cta(category: str) -> str:
+    return CATEGORY_CTA.get(category.lower().strip(), DEFAULT_CTA)
+
+
+def is_thane_related(title: str, url: str) -> bool:
+    combined = (title + " " + url).lower()
+    return any(kw.lower() in combined for kw in THANE_KEYWORDS)
+
+
 def extract_response_content(response) -> str:
     raw_choice = response.choices[0]
-
     if hasattr(raw_choice, 'message'):
         msg = raw_choice.message
         if hasattr(msg, 'content') and isinstance(msg.content, str):
@@ -1431,10 +1592,10 @@ def extract_response_content(response) -> str:
 
 
 # ============================================================
-# Script Completion Check & Callback
+# Script Completion Check — uses partial "सलाम ठाणे" match
 # ============================================================
-def is_script_complete(script: str) -> bool:
-    return script.strip().endswith(SCRIPT_CTA.strip())
+def is_script_complete(script: str, category: str = "general") -> bool:
+    return "फॉलो करा सलाम ठाणे" in script
 
 
 def get_last_line(script: str) -> str:
@@ -1445,7 +1606,10 @@ def get_last_line(script: str) -> str:
 async def complete_script_if_needed(script: str, news_article: Dict) -> str:
     global total_input_tokens, total_output_tokens, total_cost
 
-    if is_script_complete(script):
+    category = news_article.get('category', 'general')
+    cta      = get_cta(category)
+
+    if is_script_complete(script, category):
         return script
 
     last_line = get_last_line(script)
@@ -1457,7 +1621,7 @@ async def complete_script_if_needed(script: str, news_article: Dict) -> str:
             messages=[
                 {
                     "role": "system",
-                    "content": f'फक्त मराठी lines लिहा. शेवटची line नक्की हीच: "{SCRIPT_CTA}"'
+                    "content": f'फक्त मराठी lines लिहा. शेवटची line नक्की हीच: "{cta}"'
                 },
                 {
                     "role": "user",
@@ -1468,14 +1632,14 @@ async def complete_script_if_needed(script: str, news_article: Dict) -> str:
 
 नियम:
 - वरील script च्या पुढे फक्त उर्वरित lines लिहा
-- नवीन lines जोडा जेणेकरून एकूण 15-18 lines होतील
-- शेवटची line नक्की हीच: "{SCRIPT_CTA}"
+- एकूण 9-14 lines होतील असे नवीन lines जोडा
+- शेवटची line नक्की हीच: "{cta}"
 - फक्त नवीन lines लिहा, जुन्या lines परत लिहू नका
 - फक्त मराठीत लिहा"""
                 }
             ],
             temperature=0.7,
-            max_tokens=600
+            max_tokens=400
         )
 
         if hasattr(response, 'usage'):
@@ -1491,11 +1655,11 @@ async def complete_script_if_needed(script: str, news_article: Dict) -> str:
 
         if any(kw.lower() in completion.lower() for kw in REFUSAL_KEYWORDS):
             print(f"   ⚠️ Completion refused — appending CTA directly")
-            return script.strip() + f"\n\n{SCRIPT_CTA}"
+            return script.strip() + f"\n\n{cta}"
 
         completed = script.strip() + "\n\n" + completion.strip()
-        if not is_script_complete(completed):
-            completed = completed.strip() + f"\n\n{SCRIPT_CTA}"
+        if not is_script_complete(completed, category):
+            completed = completed.strip() + f"\n\n{cta}"
 
         print(f"   ✅ Script completed")
         return completed
@@ -1505,14 +1669,14 @@ async def complete_script_if_needed(script: str, news_article: Dict) -> str:
         if any(code in error_str for code in ['402', '429', 'credit', 'quota', 'insufficient']):
             raise CreditExhaustedException(str(e))
         print(f"   ⚠️ Completion error: {e} — appending CTA directly")
-        return script.strip() + f"\n\n{SCRIPT_CTA}"
+        return script.strip() + f"\n\n{cta}"
 
 
 # ============================================================
 # Marathi Validator
 # ============================================================
 def is_valid_marathi_script(script: str) -> bool:
-    if len(script) < 100:
+    if len(script) < 80:
         return False
     if any(kw.lower() in script.lower() for kw in REFUSAL_KEYWORDS):
         return False
@@ -1572,90 +1736,9 @@ async def fetch_article_with_retry(crawler, url: str, retries: int = 3) -> str:
 
 
 # ============================================================
-# Perplexity Thane News Search
-# Used as FALLBACK if scraped articles < TARGET_SCRIPTS
+# Scraping — Thane-Only
 # ============================================================
-async def fetch_thane_news_via_perplexity(needed: int) -> List[Dict]:
-    global total_input_tokens, total_output_tokens, total_cost
-
-    print(f"\n🔎 Fetching {needed} more Thane news via Perplexity search...")
-
-    try:
-        response = perplexity_client.chat.completions.create(
-            model=ANALYSIS_MODEL,
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a Marathi news researcher. Return ONLY valid JSON array."
-                },
-                {
-                    "role": "user",
-                    "content": f"""Search for the latest {needed} news articles specifically from Thane district, Maharashtra, India (including Thane city, Kalyan, Dombivli, Bhiwandi, Mira-Bhayandar, Navi Mumbai, Ulhasnagar, Ambarnath, Badlapur).
-
-Return a JSON array with exactly {needed} items:
-[{{
-  "title": "Marathi news title",
-  "detailed_summary": "150-200 word Marathi summary of the news",
-  "category": "crime/politics/sports/general/economy/entertainment/education/horror",
-  "importance": "high/medium/low",
-  "key_points": ["point1", "point2", "point3"],
-  "link": "source URL if known, else empty string"
-}}]
-
-Rules:
-- All news MUST be from Thane district only
-- detailed_summary must be in Marathi
-- Return only the JSON array, no extra text
-- Use the most recent news available"""
-                }
-            ],
-            temperature=0.3,
-            max_tokens=4000
-        )
-
-        if hasattr(response, 'usage'):
-            i_t = response.usage.prompt_tokens
-            o_t = response.usage.completion_tokens
-            total_input_tokens  += i_t
-            total_output_tokens += o_t
-            c = (i_t * ANALYSIS_INPUT_COST) + (o_t * ANALYSIS_OUTPUT_COST)
-            total_cost += c
-            print(f"   📊 Perplexity search: {i_t}in + {o_t}out = ${c:.4f}")
-
-        content = extract_response_content(response)
-        content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL).strip()
-        match = re.search(r'\[.*\]', content, re.DOTALL)
-
-        if match:
-            parsed = json.loads(match.group())
-            results = []
-            for art in parsed:
-                if art.get('category') not in VALID_CATEGORIES:
-                    art['category'] = 'general'
-                art['source']     = 'Perplexity Search'
-                art['scraped_at'] = datetime.now(IST).isoformat()
-                art['hash']       = get_content_hash(
-                    art.get('title', ''), art.get('detailed_summary', '')
-                )
-                results.append(art)
-            print(f"   ✅ Got {len(results)} articles from Perplexity search")
-            return results
-        else:
-            print(f"   ⚠️ No JSON in Perplexity search response")
-            return []
-
-    except Exception as e:
-        error_str = str(e).lower()
-        if any(code in error_str for code in ['402', '429', 'credit', 'quota', 'insufficient']):
-            raise CreditExhaustedException(str(e))
-        print(f"   ❌ Perplexity search error: {e}")
-        return []
-
-
-# ============================================================
-# Scraping — Thane-specific sites
-# ============================================================
-async def scrape_thane_sources():
+async def scrape_thane_news_sources():
     all_news = []
 
     async with AsyncWebCrawler(verbose=False) as crawler:
@@ -1692,17 +1775,26 @@ async def scrape_thane_sources():
                     if any(kw.lower() in title.lower() for kw in SKIP_TITLE_KEYWORDS):
                         continue
 
-                    if (15 < len(title) < 300 and
-                        site['link_pattern'] in href and
-                        not any(x in href.lower() for x in SKIP_URL_PATTERNS)):
+                    if any(x in href.lower() for x in SKIP_URL_PATTERNS):
+                        continue
 
-                        if href.startswith('/'):
-                            base = (site['url'].split('/') + '//'
-                                    + site['url'].split('/'))[1]
-                            href = base + href
+                    if not (15 < len(title) < 300):
+                        continue
 
-                        if href.startswith('http'):
-                            raw_articles.append({'title': title, 'link': href})
+                    if site['link_pattern'] not in href:
+                        continue
+
+                    # ✅ Thane filter: skip non-Thane articles on general sources
+                    if site.get('thane_strict', True):
+                        if not is_thane_related(title, href):
+                            continue
+
+                    if href.startswith('/'):
+                        base = site['url'].split('/')[0] + '//' + site['url'].split('/')[2]
+                        href = base + href
+
+                    if href.startswith('http'):
+                        raw_articles.append({'title': title, 'link': href})
 
                 seen = set()
                 unique_links = []
@@ -1711,7 +1803,7 @@ async def scrape_thane_sources():
                         unique_links.append(a)
                         seen.add(a['link'])
 
-                print(f"📋 Found {len(unique_links)} unique links")
+                print(f"📋 Found {len(unique_links)} unique Thane links")
 
                 for article in unique_links:
                     if len(site_articles) >= site['target']:
@@ -1722,11 +1814,6 @@ async def scrape_thane_sources():
 
                     markdown = await fetch_article_with_retry(crawler, article['link'])
                     content  = markdown if markdown else article['title']
-
-                    # ✅ STRICT Thane filter
-                    if not is_thane_related(article['title'], content):
-                        print(f"   🚫 Not Thane-related — skipped")
-                        continue
 
                     if any(kw.lower() in content.lower() for kw in SKIP_CONTENT_KEYWORDS):
                         print(f"   ⏭️  Skipped (utility/spiritual content)")
@@ -1760,8 +1847,6 @@ async def scrape_thane_sources():
                     all_news.extend(filtered)
                     print(f"🧠 {site['name']}: Analyzed {len(filtered)} articles")
 
-            except CreditExhaustedException:
-                raise
             except Exception as e:
                 print(f"❌ Error {site['name']}: {e}")
 
@@ -1771,7 +1856,7 @@ async def scrape_thane_sources():
 
 
 # ============================================================
-# AI Categorization
+# AI Categorization — Thane-Specific Categories
 # ============================================================
 async def smart_analyze_with_category(articles: List[Dict], source_name: str):
     global total_input_tokens, total_output_tokens, total_cost
@@ -1798,17 +1883,26 @@ async def smart_analyze_with_category(articles: List[Dict], source_name: str):
         for idx, article in enumerate(batch):
             articles_text += f"INDEX_{idx}: {article['title']}\n{safe_truncate(article['content'], 500)}\n---\n"
 
-        prompt = f"""मराठी बातम्या विश्लेषक: खालील ठाणे जिल्ह्यातील बातम्यांना category आणि Marathi summary द्या.
+        prompt = f"""ठाणे जिल्ह्यातील मराठी बातम्या विश्लेषक: खालील बातम्यांना category आणि Marathi summary द्या.
 
 ⚠️ नियम:
 1. detailed_summary आणि key_points फक्त मराठीत लिहा
 2. JSON मध्ये "index" field EXACTLY जसा दिला (0,1,2,3,4) तसाच परत द्या
-3. title आणि link field नको - फक्त index वापरा
+3. title आणि link field नको — फक्त index वापरा
+4. फक्त ठाणे जिल्ह्याशी थेट संबंधित बातम्यांना "high" importance द्या
 
-Categories: sports, general, crime, politics, education, economy, entertainment, horror
+Categories (फक्त यापैकी एक वापरा):
+- crime       → गुन्हे, अपघात, मृत्यू, अटक
+- environment → झाडे, प्रदूषण, वनवा, उद्यान
+- development → मेट्रो, रस्ते, पूल, TMC प्रकल्प
+- local_events → उत्सव, रॅली, स्पर्धा, सोहळे
+- health      → आरोग्य सेवा, रुग्णालय, योजना
+- achievement → विक्रम, पुरस्कार, यश
+- politics    → राजकारण, निवडणूक, आंदोलन
+- general     → इतर सर्व
 
 JSON array format:
-[{{"index": 0, "category": "cat", "detailed_summary": "मराठी सारांश १५०-२०० शब्द", "importance": "high/medium/low", "key_points": ["मुद्दा १", "मुद्दा २", "मुद्दा ३"]}}]
+[{{"index": 0, "category": "cat", "detailed_summary": "मराठी सारांश १००-१५० शब्द", "importance": "high/medium/low", "key_points": ["मुद्दा १", "मुद्दा २", "मुद्दा ३"]}}]
 
 बातम्या:
 {articles_text}
@@ -1841,7 +1935,7 @@ JSON array format:
             content = extract_response_content(response)
 
             if not content.strip():
-                print(f"   ⚠️ Empty response! type: {type(response.choices)}")
+                print(f"   ⚠️ Empty response!")
                 raise ValueError("Empty content from API")
 
             content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL).strip()
@@ -1897,6 +1991,7 @@ JSON array format:
             if any(code in error_str for code in [
                 '402', '429', 'credit', 'quota', 'insufficient', 'balance', 'billing'
             ]):
+                print(f"\n💳 CREDITS EXHAUSTED during analysis!")
                 raise CreditExhaustedException(str(e))
             print(f"   ❌ AI error: {e}")
             for i, article in enumerate(batch):
@@ -1907,10 +2002,7 @@ JSON array format:
                     'detailed_summary': safe_truncate(article['content'], 600),
                     'importance':       'medium',
                     'link':             article['link'],
-                    'key_points':       [
-                        article['title'],
-                        safe_truncate(article['content'], 100)
-                    ]
+                    'key_points':       [article['title'], safe_truncate(article['content'], 100)]
                 })
 
         await asyncio.sleep(1.5)
@@ -1923,32 +2015,57 @@ JSON array format:
 
 
 # ============================================================
-# Script Generation — Thane-focused prompts
+# Script Generation — 100% Salaam Thane Style
 # ============================================================
 async def create_reel_script_single(news_article: Dict):
     global total_input_tokens, total_output_tokens, total_cost
 
     category = news_article.get('category', 'general')
+    cta      = get_cta(category)
 
-    system_prompt = f"""तुम्ही एक मराठी Instagram Reel script writer आहात जे ठाणे जिल्ह्यातील बातम्यांवर content बनवतात.
-फक्त मराठी भाषेत लिहा. हिंदी, इंग्रजी किंवा स्वतःची ओळख करून देऊ नका.
-तुम्ही AI आहात हे कधीही सांगू नका. फक्त script लिहा.
+    # ✅ Category-specific hook templates — extracted from real Salaam Thane reels
+    hook_templates = {
+        "crime":        "ज्या वयात [innocence]... त्याच वयात [tragedy]... (emotional contrast)",
+        "environment":  "ठाणेकरांनो सावधान — [problem statement] (direct alarm hook)",
+        "development":  "[benefit] येणार, पण त्याची डार्क साईड माहिती आहे? (twist hook)",
+        "local_events": "[visual scene: outfit/setting/people]. ठाण्याच्या [audience group] तयार व्हा! (scene-setting hook)",
+        "health":       "आता [service/facility] होणार स्मार्ट — [location] मध्ये [benefit]. (benefit-first hook)",
+        "achievement":  "[visual scene]. जेव्हा [action] होतो, तेव्हा काय होतं माहिती आहे? [reveal]. (reveal hook)",
+        "politics":     "ठाण्यातील राजकारण आता [adjective] झालंय... (drama hook)",
+        "general":      "ठाणे जिल्ह्यात एक [adjective] घटना घडली आहे... (direct hook)",
+    }
 
-Structure (15-18 lines total):
-- Line 1-2: धक्कादायक hook — ठाणे/परिसरातील घटनेची सुरुवात
-- Line 3-10: सर्व facts (नावे, ठिकाण, तारीख, संख्या सह — ठाण्याचा उल्लेख अवश्य)
-- Line 11-14: प्रश्न / विश्लेषण / ट्विस्ट
-- Line 15-18: CTA
+    hook_guide = hook_templates.get(category, hook_templates["general"])
+
+    system_prompt = f"""तुम्ही "सलाम ठाणे" या Instagram channel चे मराठी Reel script writer आहात.
+फक्त मराठी भाषेत लिहा. तुम्ही AI आहात हे कधीही सांगू नका. फक्त script लिहा.
+
+🎯 Channel Focus: फक्त ठाणे जिल्ह्यातील hyperlocal बातम्या
+📍 Local areas: ठाणे, डोंबिवली, कल्याण, भिवंडी, उल्हासनगर, अंबरनाथ, मीरा रोड, बदलापूर, पारसिक, मुंब्रा, कोपरी
+
+Script Structure (9-14 lines total):
+- Line 1-2: HOOK — {hook_guide}
+- Line 3-9: सर्व facts — नावे, ठिकाण, तारीख, अचूक संख्या सह
+- Line 10-12: प्रश्न / विश्लेषण / twist
+- Line 13-14: audience question + CTA
+
+✅ MUST use at least 3 of these Salaam Thane signature phrases:
+→ "तब्बल [number]" — for shocking stats (e.g. तब्बल 9111 विद्यार्थिनी)
+→ "विशेष म्हणजे" — to flag a key highlight
+→ "सर्वात महत्त्वाचं म्हणजे" — for the main point
+→ "पण इथेच खरा प्रश्न उभा राहतो" — for controversy/twist
+→ "अक्षरशः" — for dramatic emphasis
+→ "सर्वात चीड यायची गोष्ट म्हणजे" — for outrage (crime/injustice)
+→ "आपल्या [ठाण्याच्या/डोंबिवलीच्या/कल्याणच्या]..." — local ownership
+→ "कौतुक आहे [person/institution] चं" — for positive stories
 
 कठोर नियम:
+- 9-14 lines total, प्रत्येक line 1-2 sentences
 - संपूर्ण output फक्त मराठीत (proper nouns सोडून)
-- 15-18 lines, प्रत्येक line 1-2 sentences
 - कोणतेही heading, explanation, markdown नाही
-- माहिती कमी असेल तर उपलब्ध facts stretch करा
 - "माहिती नाही", "खेद आहे", "मी Perplexity" असे कधीही लिहू नका
-- शेवटची line नक्की हीच: "{SCRIPT_CTA}"
-- script अर्धवट सोडू नका — शेवटपर्यंत लिहा
-- ठाणे शहर/जिल्ह्याचा उल्लेख script मध्ये कमीत कमी एकदा अवश्य करा"""
+- शेवटची line नक्की हीच: "{cta}"
+- script अर्धवट सोडू नका — शेवटपर्यंत लिहा"""
 
     summary    = safe_truncate(
         news_article.get('detailed_summary', news_article.get('title', '')), 600
@@ -1960,16 +2077,17 @@ Structure (15-18 lines total):
 सारांश: {summary}
 मुद्दे: {key_points}
 
-वरील ठाणे जिल्ह्यातील बातमीचे facts वापरून 15-18 मराठी lines तयार करा.
-शेवटची line नक्की: "{SCRIPT_CTA}"
+वरील ठाणे जिल्ह्यातील बातमीचे facts वापरून 9-14 मराठी lines तयार करा.
+"तब्बल", "विशेष म्हणजे", "सर्वात महत्त्वाचं म्हणजे" यापैकी किमान 3 phrases वापरा.
+शेवटची line नक्की: "{cta}"
 जरी माहिती कमी असली तरी उपलब्ध तथ्यांवर आधारित पूर्ण script लिहा."""
 
-    user_prompt_v2 = f"""खालील ठाणे जिल्ह्यातील बातमीवर 15 मराठी वाक्ये लिहा.
+    user_prompt_v2 = f"""खालील ठाणे जिल्ह्यातील बातमीवर 10 मराठी वाक्ये लिहा.
 बातमी: {news_article['title']}. {safe_truncate(summary, 200)}
-- प्रत्येक वाक्य नवीन line वर लिहा
-- फक्त मराठीत लिहा, हिंदी/इंग्रजी नको
-- ठाण्याचा उल्लेख कमीत कमी एकदा करा
-- शेवटची line नक्की: "{SCRIPT_CTA}" """
+- प्रत्येक वाक्य नवीन line वर
+- फक्त मराठीत
+- "तब्बल" किंवा "विशेष म्हणजे" नक्की वापरा
+- शेवटची line नक्की: "{cta}" """
 
     prompts = [user_prompt_v1, user_prompt_v2]
 
@@ -1982,7 +2100,7 @@ Structure (15-18 lines total):
                     {"role": "user",   "content": prompts[attempt - 1]}
                 ],
                 temperature=0.8,
-                max_tokens=2000
+                max_tokens=1500
             )
 
             if hasattr(response, 'usage'):
@@ -1997,14 +2115,14 @@ Structure (15-18 lines total):
             script = script.replace('```', '').strip()
 
             if any(kw.lower() in script.lower() for kw in REFUSAL_KEYWORDS):
-                print(f"   ⚠️ Attempt {attempt}: Refusal — '{script[:60]}...' — retrying...")
+                print(f"   ⚠️ Attempt {attempt}: Refusal — retrying...")
                 continue
 
             if is_valid_marathi_script(script):
                 script = await complete_script_if_needed(script, news_article)
                 return script
 
-            print(f"   ⚠️ Attempt {attempt}: Not valid Marathi ({script[:60]}...) — retrying...")
+            print(f"   ⚠️ Attempt {attempt}: Not valid Marathi — retrying...")
 
         except CreditExhaustedException:
             raise
@@ -2017,30 +2135,26 @@ Structure (15-18 lines total):
             print(f"   ⚠️ Attempt {attempt} error: {e}")
             await asyncio.sleep(2)
 
-    # Last-resort fallback with real article content
-    title   = news_article.get('title', 'ठाण्यातील एक महत्त्वाची बातमी')[:80]
-    summary = safe_truncate(
+    # ✅ Fallback — Salaam Thane styled
+    title_fb   = news_article.get('title', 'एक महत्त्वाची बातमी')[:80]
+    summary_fb = safe_truncate(
         news_article.get('detailed_summary', news_article.get('title', '')), 200
     )
-    return f"""{title}
+    cta_fb = get_cta(category)
 
-{summary}
+    return f"""{title_fb}
 
-ही घटना ठाण्यात मोठी चर्चा निर्माण करत आहे.
+{summary_fb}
 
-या प्रकरणात अनेक महत्त्वाचे प्रश्न उपस्थित होत आहेत.
+ही घटना ठाणे जिल्ह्यात मोठी चर्चा निर्माण करत आहे.
 
-ठाणे प्रशासनाने याबाबत तातडीने उत्तर देणे आवश्यक आहे.
+विशेष म्हणजे या प्रकरणात अनेक महत्त्वाचे प्रश्न उपस्थित होत आहेत.
 
-ठाण्यातील सर्वसामान्य नागरिकांवर या घटनेचा थेट परिणाम होणार आहे.
+सर्वात महत्त्वाचं म्हणजे सर्वसामान्य ठाणेकरांवर याचा थेट परिणाम होणार आहे.
 
-विरोधी पक्षाने या मुद्द्यावर ठाणे प्रशासनाला धारेवर धरले आहे.
+पण इथेच खरा प्रश्न उभा राहतो — प्रशासन नक्की काय पाऊल उचलणार?
 
-येत्या काळात या प्रकरणात मोठी उलथापालथ होण्याची शक्यता आहे.
-
-तुम्हाला या बातमीबद्दल काय वाटते, ते नक्की सांगा.
-
-{SCRIPT_CTA}"""
+{cta_fb}"""
 
 
 # ============================================================
@@ -2050,10 +2164,11 @@ async def main():
     global total_input_tokens, total_output_tokens, total_cost
 
     print("=" * 70)
-    print("🚀 SALAM THANE - NEWS SCRAPER v1.0")
+    print("🟢 SALAAM THANE — HYPERLOCAL REEL SCRIPT GENERATOR v1.0")
     print(f"🔍 Analysis : {ANALYSIS_MODEL}")
     print(f"✍️  Scripts  : {SCRIPT_MODEL}")
-    print(f"🎯 Target   : {TARGET_SCRIPTS} scripts (Thane Only)")
+    print(f"🎯 Target   : {TARGET_SCRIPTS} scripts")
+    print(f"📍 Focus    : ठाणे जिल्हा — Hyperlocal Only")
     print(f"🕐 Timezone : IST (Asia/Kolkata)")
     print("=" * 70)
 
@@ -2066,16 +2181,15 @@ async def main():
     start_time = datetime.now(IST)
 
     print("\n" + "=" * 70)
-    print("STEP 1: SCRAPING THANE NEWS SITES")
+    print("STEP 1: SCRAPING 5 THANE NEWS SOURCES")
     print("=" * 70 + "\n")
 
     try:
-        all_articles = await scrape_thane_sources()
+        all_articles = await scrape_thane_news_sources()
     except CreditExhaustedException:
         print("\n🛑 Credits exhausted during scraping. Stopping.")
         return
 
-    # De-duplicate
     unique_articles = []
     seen_hashes = set()
     for article in all_articles:
@@ -2086,27 +2200,10 @@ async def main():
             unique_articles.append(article)
             seen_hashes.add(h)
 
-    print(f"\n✅ Thane articles scraped: {len(unique_articles)}")
-
-    # ✅ Perplexity fallback if scraping gave fewer than target
-    if len(unique_articles) < TARGET_SCRIPTS:
-        needed = TARGET_SCRIPTS - len(unique_articles)
-        print(f"⚡ Only {len(unique_articles)} scraped — fetching {needed} more via Perplexity AI search...")
-        try:
-            extra = await fetch_thane_news_via_perplexity(needed)
-            for art in extra:
-                h = art.get('hash', '')
-                if h not in seen_hashes:
-                    unique_articles.append(art)
-                    seen_hashes.add(h)
-        except CreditExhaustedException:
-            print("🛑 Credits exhausted during Perplexity fallback.")
-
     print(f"\n✅ Total unique Thane articles: {len(unique_articles)}")
 
     if len(unique_articles) < TARGET_SCRIPTS:
-        print(f"⚠️  Only {len(unique_articles)} articles found — "
-              f"will generate {len(unique_articles)} scripts instead of {TARGET_SCRIPTS}")
+        print(f"⚠️  Only {len(unique_articles)} articles — generating {len(unique_articles)} scripts")
 
     category_counts = {}
     for article in unique_articles:
@@ -2133,9 +2230,10 @@ async def main():
 
     if worksheet and selected_articles:
         for idx, article in enumerate(selected_articles, 1):
+            cat = article.get('category', 'general')
             print(f"\n[{idx:02d}/{len(selected_articles)}] "
-                  f"{article.get('source','')[:14]} | "
-                  f"{article.get('category','').upper():<13} | "
+                  f"{article.get('source','')[:12]} | "
+                  f"{cat.upper():<13} | "
                   f"{article['title'][:40]}...")
 
             try:
@@ -2150,13 +2248,13 @@ async def main():
             total_ch    = len(script.replace(' ', '').replace('\n', ''))
             marathi_pct = (dev_chars / max(total_ch, 1)) * 100
             lang_tag    = "🇮🇳" if marathi_pct > 35 else "⚠️"
-            cta_tag     = "✅" if is_script_complete(script) else "⚠️ NO CTA"
+            cta_tag     = "✅" if is_script_complete(script, cat) else "⚠️ NO CTA"
             print(f"   📝 {lang_tag} ({marathi_pct:.0f}%) | CTA:{cta_tag} | "
                   f"🔗 {article.get('link','')[:55]}...")
 
             success = save_to_google_sheets(
                 worksheet,
-                article.get('category', 'general'),
+                cat,
                 article['title'],
                 script,
                 article.get('link', '')
@@ -2172,11 +2270,11 @@ async def main():
     total_tokens   = total_input_tokens + total_output_tokens
 
     print("\n" + "=" * 70)
-    print("📈 FINAL SUMMARY — SALAM THANE")
+    print("📈 FINAL SUMMARY — SALAAM THANE")
     print("=" * 70)
     print(f"   🔍 Analysis model     : {ANALYSIS_MODEL}")
     print(f"   ✍️  Script model       : {SCRIPT_MODEL}")
-    print(f"   📰 Thane articles     : {len(unique_articles)}")
+    print(f"   📰 Articles scraped   : {len(unique_articles)}")
     print(f"   ✅ Scripts saved      : {successful_saves}")
     print(f"   ❌ Failed             : {failed_saves}")
     print(f"   ⏱️  Total time         : {total_duration:.0f}s ({total_duration/60:.1f} mins)")
